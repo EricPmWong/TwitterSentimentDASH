@@ -1,3 +1,6 @@
+# NOTE: If the stream is faster than graphing it will break
+
+
 #Statitstics and Visuals
 import numpy as np
 import pandas as pd
@@ -31,7 +34,7 @@ import plotly.tools as tls
 
 ###########################################################
 #Input brand of interest here
-brand = 'Gucci'
+brand = 'Trump'
 ##########################################################
 
 
@@ -55,12 +58,14 @@ positive=0
 negative=0
 neutral=0
 combined=0
+total =0
 
 timex = [] #X var
 timeypos = [] #Green Var
 timeyneg = [] #Red Var
 timeyneu = [] # Blue var
 timeysent = [] # Dashed line
+totalpnn = [] 
 
 # Plotly stuff
 
@@ -80,21 +85,32 @@ stream7 = plotly.graph_objs.scatter.Stream(token =stream_ids[6], maxpoints=60)
 s1 = py.Stream(stream_ids[0])
 s2 = py.Stream(stream_ids[1])
 s3 = py.Stream(stream_ids[2])
+s4 = py.Stream(stream_ids[3])
+s5 = py.Stream(stream_ids[4])
+s6 = py.Stream(stream_ids[5])
+s7 = py.Stream(stream_ids[6])
 
-
-trace1 = go.Scatter(name = 'Neagtive', x=timex, y=timeyneg, mode='lines+markers', stream = stream1, fill = 'tozeroy',  stackgroup='one', text="Negative",)
+#Line Graph 
+trace1 = go.Scatter(name = 'Negative', x=timex, y=timeyneg, mode='lines+markers', stream = stream1, fill = 'tozeroy',  stackgroup='one', text="Negative",)
 trace2 = go.Scatter(name = 'Neutral', x=timex, y=timeyneu, mode='lines+markers', stream = stream2, fill = 'tonexty',   stackgroup='one', text="Neutral",)
 trace3 = go.Scatter(name = 'Positive',x=timex, y=timeypos, mode='lines+markers', stream = stream3, fill = 'tonexty',   stackgroup='one', text="Positive",)
-
 data = [trace1, trace2, trace3]
-
-#Scrolling layout
-movingscroll = list(timex[-10:-1])
-
-#
 layout = go.Layout(title=(str(brand)+" Sentiment Analysis"))
-
 fig = dict(data=data, layout=layout)
+
+#Line Graph Percentage
+trace4 = go.Scatter(name = 'Negative percent', x=timex, y=timeyneg, mode='lines+markers', stream = stream4, fill = 'tozeroy',  stackgroup='one', text="Negative", groupnorm='percent',  )
+trace5 = go.Scatter(name = 'Neutral percent', x=timex, y=timeyneu, mode='lines+markers', stream = stream5, fill = 'tonexty',   stackgroup='one', text="Neutral",)
+trace6 = go.Scatter(name = 'Positive percent',x=timex, y=timeypos, mode='lines+markers', stream = stream6, fill = 'tonexty',   stackgroup='one', text="Positive",)
+datap = [trace4, trace5, trace6]
+layoutp = go.Layout(title=(str(brand)+" Sentiment Analysis by percent"))
+figpercent = dict(data=datap, layout=layoutp)
+
+
+
+
+
+
 
 #Creates a class of filters, data modificaitons, etc to create twitter data
 
@@ -127,7 +143,7 @@ class stdOUTlistener(StreamListener):
             global neutral
             global combined  
             global count
-            
+            global total
             count += 1
             sentiment = 0
         
@@ -153,7 +169,7 @@ class stdOUTlistener(StreamListener):
                 
                 
                 combined += sen.sentiment.polarity
-                
+                total += (positive+negative+neutral)
             
             
             #Creates a list used for plotting
@@ -162,6 +178,7 @@ class stdOUTlistener(StreamListener):
             timeyneg.append(negative)
             timeyneu.append(neutral+negative) 
             timeysent.append(combined) 
+            totalpnn.append(total)
             
             s1.open()
             s1.write(dict(x=timex, y=timeyneg))
@@ -172,8 +189,17 @@ class stdOUTlistener(StreamListener):
             s3.open()
             s3.write(dict(x=timex, y=timeypos))
 
-            
+            s4.open()
+            s4.write(dict(x=timex, y=timeyneg))
 
+            s5.open()
+            s5.write(dict(x=timex, y=timeypos))
+
+            s6.open()
+            s6.write(dict(x=timex, y=timeyneu))
+
+            #s7.open()
+            #s7.write(dict(x=timex, y=timeypos))
 
             #plt.plot(timex, timeypos, c='green')
             #plt.plot(timex, timeyneg, c='red')
@@ -188,7 +214,8 @@ class stdOUTlistener(StreamListener):
             #print("neutral", neutral)
             #print("combined sent", compound)
             #print(sentiment)
-            
+            #print(total)
+            #print(totalpnn)
 
             
         except:
@@ -204,8 +231,12 @@ auth = OAuthHandler(API, APIKEY)
 auth.set_access_token(ACC, ACCKEY)
 
 
+py.plot(figpercent, filename="Twit Sent Percent")
 
-py.plot(fig)
+py.plot(fig, filename="Twit Sent Abs")
+
+
+
 #Uncomment to test Matplotlib
 #plt.style.use('ggplot')
 #plt.show(block=False)
