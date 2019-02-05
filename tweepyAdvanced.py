@@ -1,6 +1,5 @@
 # NOTE: If the stream is faster than graphing it will break
 
-
 #Statitstics and Visuals
 import numpy as np
 import pandas as pd
@@ -9,7 +8,6 @@ import datetime
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-
 #Tweepy
 from tweepy import Stream, OAuthHandler, StreamListener
 from tweepy.streaming import StreamListener
@@ -17,9 +15,13 @@ import json
 
 #Sentiment Analysis
 from textblob import TextBlob #More Acccurate
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer #Faster
+import nltk 
 import re
 
+
+#tokenizer
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import CountVectorizer
 
 #Dashboard
 import plotly 
@@ -34,7 +36,7 @@ import plotly.tools as tls
 
 ###########################################################
 #Input brand of interest here
-brand = 'Trump'
+brand = 'Gucci'
 ##########################################################
 
 
@@ -66,22 +68,36 @@ timeyneg = [] #Red Var
 timeyneu = [] # Blue var
 timeysent = [] # Dashed line
 totalpnn = [] 
-
+#texty = []
+#textx = []
 # Plotly stuff
+tokens=[]
 
 stream_ids = tls.get_credentials_file()['stream_ids']
 print (stream_ids)
 
+#Count Vectorizer
 
 
+
+
+
+#Creating Plotly Streams
+# Absolute Senitment
 stream1 = plotly.graph_objs.scatter.Stream(token =stream_ids[0], maxpoints=60)
 stream2 = plotly.graph_objs.scatter.Stream(token =stream_ids[1], maxpoints=60)
 stream3 = plotly.graph_objs.scatter.Stream(token =stream_ids[2], maxpoints=60)
+# Percent Sentiment
 stream4 = plotly.graph_objs.scatter.Stream(token =stream_ids[3], maxpoints=60)
 stream5 = plotly.graph_objs.scatter.Stream(token =stream_ids[4], maxpoints=60)
 stream6 = plotly.graph_objs.scatter.Stream(token =stream_ids[5], maxpoints=60)
-stream7 = plotly.graph_objs.scatter.Stream(token =stream_ids[6], maxpoints=60)
+# Live tweet
+#stream7 = plotly.graph_objs.bar.Stream(token =stream_ids[6], maxpoints=60)
+#Count Vectorizer
+stream8 = plotly.graph_objs.histogram.Stream(token =stream_ids[7], maxpoints=60)
 
+
+# Stream objects
 s1 = py.Stream(stream_ids[0])
 s2 = py.Stream(stream_ids[1])
 s3 = py.Stream(stream_ids[2])
@@ -89,7 +105,7 @@ s4 = py.Stream(stream_ids[3])
 s5 = py.Stream(stream_ids[4])
 s6 = py.Stream(stream_ids[5])
 s7 = py.Stream(stream_ids[6])
-
+s8 = py.Stream(stream_ids[7])
 #Line Graph 
 trace1 = go.Scatter(name = 'Negative', x=timex, y=timeyneg, mode='lines+markers', stream = stream1, fill = 'tozeroy',  stackgroup='one', text="Negative",)
 trace2 = go.Scatter(name = 'Neutral', x=timex, y=timeyneu, mode='lines+markers', stream = stream2, fill = 'tonexty',   stackgroup='one', text="Neutral",)
@@ -103,13 +119,21 @@ trace4 = go.Scatter(name = 'Negative percent', x=timex, y=timeyneg, mode='lines+
 trace5 = go.Scatter(name = 'Neutral percent', x=timex, y=timeyneu, mode='lines+markers', stream = stream5, fill = 'tonexty',   stackgroup='one', text="Neutral",)
 trace6 = go.Scatter(name = 'Positive percent',x=timex, y=timeypos, mode='lines+markers', stream = stream6, fill = 'tonexty',   stackgroup='one', text="Positive",)
 datap = [trace4, trace5, trace6]
-layoutp = go.Layout(title=(str(brand)+" Sentiment Analysis by percent"))
+layoutp = go.Layout(title=(str(brand)+" Sentiment Analysis Normalized"))
 figpercent = dict(data=datap, layout=layoutp)
 
+#Tweet Display
+#trace7 = go.Table(stream=stream7, header = dict(values=['Tweets']),
+    #cells = dict(values=[texty]))
+#dataf = [trace7]
+#layoutt = go.Layout(title=(str(brand)+" Live Tweets"))
+#figtable = dict(data=dataf, layout=layoutt)
 
-
-
-
+#Tokenize
+trace8 = go.Histogram(y=tokens, stream = stream8)
+datat = [trace8]
+layoutt = go.Layout(title=(str(brand)+" Common words"))
+fighist = dict(data=datat, layout=layoutt)
 
 
 #Creates a class of filters, data modificaitons, etc to create twitter data
@@ -134,7 +158,7 @@ class stdOUTlistener(StreamListener):
             tweet=all_data["text"]
             
             #Tweet Cleaning 
-            tweet=' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+)", " ", tweet).split())
+            tweet=' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t]) |(\w+:\/\/\S+',’)", " ", tweet).split())
             blob=TextBlob(tweet.strip())
 
             #Sentiment Analysis
@@ -144,6 +168,7 @@ class stdOUTlistener(StreamListener):
             global combined  
             global count
             global total
+            global text
             count += 1
             sentiment = 0
         
@@ -167,11 +192,15 @@ class stdOUTlistener(StreamListener):
                 else:
                     neutral +=1
                 
-                
+            
+                #text.append(sen)
                 combined += sen.sentiment.polarity
                 total += (positive+negative+neutral)
-            
-            
+                
+                # Tokenizer
+                tokens.extend([word for word in blob.words if word not in stopwords.words('english') and word not in "RT" and word not in "’" and word not in ","])
+                print(count)
+                
             #Creates a list used for plotting
             timex.append(t)
             timeypos.append(positive + negative + neutral) 
@@ -182,24 +211,20 @@ class stdOUTlistener(StreamListener):
             
             s1.open()
             s1.write(dict(x=timex, y=timeyneg))
-            
             s2.open()
             s2.write(dict(x=timex, y=timeyneu))
-
             s3.open()
             s3.write(dict(x=timex, y=timeypos))
-
             s4.open()
             s4.write(dict(x=timex, y=timeyneg))
-
             s5.open()
             s5.write(dict(x=timex, y=timeypos))
-
             s6.open()
             s6.write(dict(x=timex, y=timeyneu))
-
             #s7.open()
-            #s7.write(dict(x=timex, y=timeypos))
+            #s7.write(dict(x=, y)))
+            s8.open()
+            s8.write(dict(y=tokens))
 
             #plt.plot(timex, timeypos, c='green')
             #plt.plot(timex, timeyneg, c='red')
@@ -231,10 +256,13 @@ auth = OAuthHandler(API, APIKEY)
 auth.set_access_token(ACC, ACCKEY)
 
 
-py.plot(figpercent, filename="Twit Sent Percent")
+#py.plot(figpercent, filename="Twit Sent Percent")
 
-py.plot(fig, filename="Twit Sent Abs")
+#py.plot(fig, filename="Twit Sent Abs")
 
+#py.plot(figtable, filename="Live Twit Feed")
+
+#py.plot(fighist, filename="Word Count Hist")
 
 
 #Uncomment to test Matplotlib
