@@ -63,6 +63,9 @@ ACCKEY = 'nC5z5yiLweU17qDtrdwrsQmtAJiLUb2915c2IHGAkngYS'
 
 #Plotting variables
 
+## SET MESSAGE NEGATIVE TWEET TOLERANCE
+tolerance = 10 
+
 count = 0
 positive=0
 negative=0
@@ -155,10 +158,11 @@ data = [trace1, trace2, trace3]
 layout = {'title':(str(brand)+" Sentiment Analysis"),
 'shapes': [
 {'type': 'line',
+'xref': 'paper',
 'x0': 0,
-'y0': 20,
-'x1': datetime.datetime.now().strftime('%M:%S'),
-'y1': 20,
+'y0': tolerance,
+'x1': 1, #datetime.datetime.now().strftime('%M:%S'),
+'y1': tolerance,
 'line': {
 'color': 'red',
 'width': 4,
@@ -223,7 +227,7 @@ class stdOUTlistener(StreamListener):
         
         global sms
         for x in timeyneg:
-            if x >= 20 and sms == 0:
+            if x >= tolerance and sms == 0:
                 import alert_sms
                 sms += 1
     
