@@ -25,6 +25,7 @@ import re
 #tokenizer
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
+from collections import Counter
 
 #Dashboard
 import plotly 
@@ -40,7 +41,7 @@ import plotly.tools as tls
 #Arima
 
 from statsmodels.tsa.arima_model import ARIMA
-
+from urllib3.exceptions import ProtocolError
 
 ###########################################################
 #Input brand of interest here
@@ -87,9 +88,14 @@ totalpnn = []
 #textx = []
 # Plotly stuff
 tokens=[]
+tokenstop =[]
+Tx=[]
+Ty=[]
+
 posvar = []
 negvar = []
 neuvar = []
+
 
 #Arima
 arimap = []
@@ -114,16 +120,22 @@ print (stream_ids)
 stream1 = plotly.graph_objs.scatter.Stream(token =stream_ids[0], maxpoints=60)
 stream2 = plotly.graph_objs.scatter.Stream(token =stream_ids[1], maxpoints=60)
 stream3 = plotly.graph_objs.scatter.Stream(token =stream_ids[2], maxpoints=60)
+
 # Percent Sentiment
 stream4 = plotly.graph_objs.scatter.Stream(token =stream_ids[3], maxpoints=60)
 stream5 = plotly.graph_objs.scatter.Stream(token =stream_ids[4], maxpoints=60)
 stream6 = plotly.graph_objs.scatter.Stream(token =stream_ids[5], maxpoints=60)
+
 # Live tweet
 #stream7 = plotly.graph_objs.bar.Stream(token =stream_ids[6], maxpoints=60)
+
 #Count Vectorizer
-stream8 = plotly.graph_objs.histogram.Stream(token =stream_ids[7], maxpoints=60)
+stream8 = plotly.graph_objs.bar.Stream(token =stream_ids[7], maxpoints=60)
+
 #Heatmap 
 #stream9 = plotly.graph_objs.heatmap.Stream(token =stream_ids[8], maxpoints=60)
+
+#Positive/Negative Rolling Mean 3
 stream10 = plotly.graph_objs.scatter.Stream(token =stream_ids[9], maxpoints=60)
 #stream11 = plotly.graph_objs.scatter.Stream(token =stream_ids[10], maxpoints=60)
 stream12 = plotly.graph_objs.scatter.Stream(token =stream_ids[11], maxpoints=60)
@@ -167,6 +179,33 @@ layout = {'title':(str(brand)+" Sentiment Analysis"),
 'color': 'red',
 'width': 4,
 'dash': 'dashdot'}}
+    ],
+    'annotations' : [
+        dict(
+            x=.05,
+            y=tolerance - 1,
+            xref='paper',
+            yref='y',
+            text='Text Warning Enabled',
+            showarrow=False,
+            font=dict(
+                family='Courier New, monospace',
+                size=16,
+                color='#ffffff'
+            ),
+            align='center',
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor='#636363',
+            ax=20,
+            ay=-30,
+            bordercolor='#c7c7c7',
+            borderwidth=2,
+            borderpad=4,
+            bgcolor='red',
+            opacity=1
+        )
     ]
 }
 
@@ -188,7 +227,8 @@ figpercent = dict(data=datap, layout=layoutp)
 #figtable = dict(data=dataf, layout=layoutt)
 
 #Tokenize Word Count
-trace8 = go.Histogram(y=tokens, stream = stream8)
+
+trace8 = go.Bar(x= Tx, y=Ty,  stream = stream8, orientation='h')
 datat = [trace8]
 layoutt = go.Layout(title=(str(brand)+" Common words"))
 fighist = dict(data=datat, layout=layoutt)
@@ -202,14 +242,18 @@ fighist = dict(data=datat, layout=layoutt)
 #Tweet per interval
 
 #Positive Track
-trace10 = go.Scatter(name = 'Negative', x=timex, y=negvar, mode='lines+markers', stream = stream10, text="Negative", line =dict(color ='blue'))
-trace13 = go.Scatter(name = 'Predicted', x=timex, y=ariman, mode='lines+markers', stream = stream13, text="Predicted", line =dict(color ='orange'))
+trace10 = go.Scatter(name = 'Negative', x=timex, y=negvar, mode='lines+markers', stream = stream10, text="Negative", line =dict(color ='blue', ))
+trace13 = go.Scatter(name = 'Rolling Mean 3', x=timex, y=ariman, mode='lines+markers', stream = stream13, text="Predicted", line =dict(color = ('red'),
+        width = 4,
+        dash = 'dot'))
 layout1 = go.Layout(title = (str(brand)+" Negative Tweets per minute"))
 figminneg = dict(data=[trace10, trace13], layout=layout1)
 
 #Negative Track
 trace12 = go.Scatter(name = 'Positive',x=timex, y=posvar, mode='lines+markers', stream = stream12,  text="Positive", line =dict(color='green'))
-trace14 = go.Scatter(name = 'Predicted', x=timex, y=arimap, mode='lines+markers', stream = stream14, text="Predicted", line =dict(color ='orange'))
+trace14 = go.Scatter(name = 'Rolling Mean 3', x=timex, y=arimap, mode='lines+markers', stream = stream14, text="Predicted", line =dict(color = ('red'),
+        width = 4,
+        dash = 'dot'))
 layout2 = go.Layout(title = (str(brand)+" Positive Tweets per minute"))
 figminpos = dict(data=[trace12, trace14], layout=layout2)
 
@@ -261,7 +305,8 @@ class stdOUTlistener(StreamListener):
             global neuvar
             global arimap 
             global ariman
-
+            global Tx
+            global Ty
 
             count += 1
             sentiment = 0
@@ -293,35 +338,42 @@ class stdOUTlistener(StreamListener):
                 total += (positive+negative+neutral)
                 
                 # Tokenizer
-                tokens.extend([word for word in blob.words if word not in stopwords.words('english') and word not in "RT" and word not in "’" and word not in ","])
-                print(count)
+                tokens.extend([word for word in blob.words if word not in stopwords.words('english') and word not in "RT" and word not in "’" and word not in "," and word not in "https"])
+                tokenstop = Counter(tokens)
+                Tx = [x[1] for x in tokenstop.most_common(30)]
+                Ty = [x[0] for x in tokenstop.most_common(30)]
+                #print(Tx, Ty)
                 
                 
             #ARIMA 
-            #Change p and q according to assumptions
+            #Changed in favor of rolling mean manually calculated due to CPU overhead
             
-            if len(timex) > 5:
+            if len(timex) > 3:
                 try:
+                    #Calculating moving average instead
+                    arimap.append(np.mean([posvar[-3],posvar[-2], posvar[-1]]))
+                   
+                    ariman.append(np.mean([negvar[-3],negvar[-2], negvar[-1]]))
                     #pos
-                    modelp = ARIMA(posvar,order=(0,0,1))
-                    modelp_fit = modelp.fit(disp=0)
-                    predpos = modelp_fit.predict().astype(float)
-                    predposap = predpos[-1]
-                    arimap.append(predposap)
+                    #modelp = ARIMA(posvar,order=(0,0,2))
+                    #modelp_fit = modelp.fit(disp=0)
+                    #predpos = modelp_fit.predict().astype(float)
+                    #predposap = predpos[-1]
+                    #arimap.append(predposap)
                     #print("Positve Arima",arimap)
                     #neg
-                    modeln = ARIMA(negvar ,order=(0,0,1))
-                    modeln_fit = modeln.fit(disp=0)
-                    predneg = modeln_fit.predict().astype(float)
-                    prednegap = predneg[-1]
-                    ariman.append(prednegap)
+                    #modeln = ARIMA(negvar ,order=(0,0,2))
+                    ##modeln_fit = modeln.fit(disp=0)
+                    #predneg = modeln_fit.predict().astype(float)
+                    #prednegap = predneg[-1]
+                    #ariman.append(prednegap)
                     #print("Negative Arima",ariman)
-                except:
-                    arimap.append(0)
-                    ariman.append(0)
+                except: 
+                    arimap.append(0.00)
+                    ariman.append(0.00)
             else: 
-                arimap.append(0)
-                ariman.append(0)
+                arimap.append(0.00)
+                ariman.append(0.00)
                
 
 
@@ -360,7 +412,7 @@ class stdOUTlistener(StreamListener):
             #s7.open()
             #s7.write(dict(x=, y)))
             s8.open()
-            s8.write(dict(y=tokens))
+            s8.write(dict(x=Tx, y=Ty))
             #s9.open()
             #s9.write(dict(x=timex, y=timeysent))
             s10.open()
@@ -380,7 +432,7 @@ class stdOUTlistener(StreamListener):
             #plt.plot(timex, timeyneg, c='red')
             #plt.pause(.1)
 
-            #print("tweet num", count)
+            print("tweet #", count)
             #print("time", t)
             #print(blob)
             #print("LABELED AS ", sen.sentiment.polarity)
@@ -399,6 +451,7 @@ class stdOUTlistener(StreamListener):
 
         except:
             pass
+            print('error in loop')
     def on_error(self, status):
         print(status)
         pass
@@ -421,6 +474,7 @@ auth.set_access_token(ACC, ACCKEY)
 #py.plot(figpercent, filename="Twit Sent Percent")
 
 #py.plot(figminneg, filename="Tweet per min neg")
+
 #py.plot(figminpos, filename="Tweet per min pos")
 
 
@@ -431,5 +485,11 @@ auth.set_access_token(ACC, ACCKEY)
 
 #Creating Streamer, pairs authentication and listerner class
 stream = Stream(auth, listener)
-stream.filter(track=[brand], languages=["en"]);
 
+
+while True:
+    try:
+        stream.filter(track=[brand], languages=["en"]);
+
+    except (ProtocolError, AttributeError):
+        continue

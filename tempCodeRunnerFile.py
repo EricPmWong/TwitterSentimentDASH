@@ -1,2 +1,2 @@
 
-#py.plot(fighist, filename="Word Count Hist")
+datat = [trace8]
