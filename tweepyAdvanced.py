@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 import time
 import datetime
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+#import matplotlib.pyplot as plt
+#import matplotlib.animation as animation
 
 #Tweepy
 from tweepy import Stream, OAuthHandler, StreamListener
@@ -17,21 +17,21 @@ import json
 
 #Sentiment Analysis
 from textblob import TextBlob #More Acccurate
-import nltk 
+#import nltk 
 import re
 
 #Twilio text msging
 
 #tokenizer
 from nltk.corpus import stopwords
-from sklearn.feature_extraction.text import CountVectorizer
+#from sklearn.feature_extraction.text import CountVectorizer
 from collections import Counter
 
 #Dashboard
 import plotly 
 import plotly.plotly as py
-import plotlywrapper as pw
-import dash
+#import plotlywrapper as pw
+#import dash
 from dash.dependencies import Output, Input
 import dash_core_components as dcc
 import dash_html_components as html
@@ -40,7 +40,7 @@ import plotly.tools as tls
 
 #Arima
 
-from statsmodels.tsa.arima_model import ARIMA
+#from statsmodels.tsa.arima_model import ARIMA
 from urllib3.exceptions import ProtocolError
 
 ###########################################################
@@ -71,8 +71,8 @@ count = 0
 positive=0
 negative=0
 neutral=0
-combined=0
-total =0
+#combined=0
+#total =0
 positve_var = 0
 negative_var = 0
 neutral_var = 0
@@ -83,7 +83,7 @@ timeypos = [] #Green Var
 timeyneg = [] #Red Var
 timeyneu = [] # Blue var
 timeysent = [] # Dashed line
-totalpnn = [] 
+#totalpnn = [] 
 #texty = []
 #textx = []
 # Plotly stuff
@@ -117,30 +117,30 @@ print (stream_ids)
 
 #Creating Plotly Streams
 # Absolute Senitment
-stream1 = plotly.graph_objs.scatter.Stream(token =stream_ids[0], maxpoints=60)
-stream2 = plotly.graph_objs.scatter.Stream(token =stream_ids[1], maxpoints=60)
-stream3 = plotly.graph_objs.scatter.Stream(token =stream_ids[2], maxpoints=60)
+stream1 = plotly.graph_objs.scatter.Stream(token =stream_ids[0], maxpoints=600)
+stream2 = plotly.graph_objs.scatter.Stream(token =stream_ids[1], maxpoints=600)
+stream3 = plotly.graph_objs.scatter.Stream(token =stream_ids[2], maxpoints=600)
 
 # Percent Sentiment
-stream4 = plotly.graph_objs.scatter.Stream(token =stream_ids[3], maxpoints=60)
-stream5 = plotly.graph_objs.scatter.Stream(token =stream_ids[4], maxpoints=60)
-stream6 = plotly.graph_objs.scatter.Stream(token =stream_ids[5], maxpoints=60)
+stream4 = plotly.graph_objs.scatter.Stream(token =stream_ids[3], maxpoints=600)
+stream5 = plotly.graph_objs.scatter.Stream(token =stream_ids[4], maxpoints=600)
+stream6 = plotly.graph_objs.scatter.Stream(token =stream_ids[5], maxpoints=600)
 
 # Live tweet
-#stream7 = plotly.graph_objs.bar.Stream(token =stream_ids[6], maxpoints=60)
+#stream7 = plotly.graph_objs.bar.Stream(token =stream_ids[6], maxpoints=600)
 
 #Count Vectorizer
-stream8 = plotly.graph_objs.bar.Stream(token =stream_ids[7], maxpoints=60)
+stream8 = plotly.graph_objs.bar.Stream(token =stream_ids[7], maxpoints=600)
 
 #Heatmap 
-#stream9 = plotly.graph_objs.heatmap.Stream(token =stream_ids[8], maxpoints=60)
+#stream9 = plotly.graph_objs.heatmap.Stream(token =stream_ids[8], maxpoints=600)
 
 #Positive/Negative Rolling Mean 3
-stream10 = plotly.graph_objs.scatter.Stream(token =stream_ids[9], maxpoints=60)
-#stream11 = plotly.graph_objs.scatter.Stream(token =stream_ids[10], maxpoints=60)
-stream12 = plotly.graph_objs.scatter.Stream(token =stream_ids[11], maxpoints=60)
-stream13 = plotly.graph_objs.scatter.Stream(token =stream_ids[12], maxpoints=60)
-stream14 = plotly.graph_objs.scatter.Stream(token =stream_ids[13], maxpoints=60)
+stream10 = plotly.graph_objs.scatter.Stream(token =stream_ids[9], maxpoints=600)
+#stream11 = plotly.graph_objs.scatter.Stream(token =stream_ids[10], maxpoints=600)
+stream12 = plotly.graph_objs.scatter.Stream(token =stream_ids[11], maxpoints=600)
+stream13 = plotly.graph_objs.scatter.Stream(token =stream_ids[12], maxpoints=600)
+stream14 = plotly.graph_objs.scatter.Stream(token =stream_ids[13], maxpoints=600)
 
 
 # Stream objects
@@ -269,6 +269,8 @@ class stdOUTlistener(StreamListener):
 #Grabbing Data
     def on_data(self,data):
         
+        
+
         global sms
         for x in timeyneg:
             if x >= tolerance and sms == 0:
@@ -280,7 +282,8 @@ class stdOUTlistener(StreamListener):
 
             global initime
             t= datetime.datetime.now().strftime('%M:%S')
-            
+            timex.append(t)
+
             #Data Loading
             all_data=json.loads(data)
             tweet=all_data["text"]
@@ -293,9 +296,13 @@ class stdOUTlistener(StreamListener):
             global positive
             global negative  
             global neutral
-            global combined  
+
+            #global combined  
+
             global count
-            global total
+
+            #global total
+            
             global text
             global positve_var
             global negative_var
@@ -309,130 +316,128 @@ class stdOUTlistener(StreamListener):
             global Ty
 
             count += 1
+            print("tweet pull", count)
+            #Reset Sentiment to 0 for each pull
             sentiment = 0
         
-            # Conducts Sentiment Analysis 
+            #Conducts Sentiment Analysis 
+
+            #Reset Vars for next loop.
             
+
             for sen in blob.sentences:
-                sentiment = sentiment+ sen.sentiment.polarity
                 
+                print(sen)
                 #Low threshold most often tweets with pictures or mentions of product are
                 #positive from a marketing perspective. Gains more traction. 
-    
-                if sentiment > 0.1:
+                sentiment = sen.sentiment.polarity
+                print(sentiment)
+                if sentiment > 0.05:
                     positive += 1
                     positve_var += 1
-
+                    print("pos")
                 #Negative tweets have a higher threshold. 
-                #Vernacular causes noises and positive tweets were False positives.(of Negatives)
-                
-                elif sentiment < -.1:
+                #Vernacular causes noises and positive tweets were False positives.(of Negatives
+                elif sentiment < -.05:
                     negative += 1
                     negative_var += 1
+                    print("neg")
                 else:
                     neutral +=1
                     neutral_var += 1
-            
-                #text.append(sen)
-                combined += sen.sentiment.polarity
-                total += (positive+negative+neutral)
-                
-                # Tokenizer
+                    print("neutral")
+
                 tokens.extend([word for word in blob.words if word not in stopwords.words('english') and word not in "RT" and word not in "’" and word not in "," and word not in "https"])
                 tokenstop = Counter(tokens)
                 Tx = [x[1] for x in tokenstop.most_common(30)]
                 Ty = [x[0] for x in tokenstop.most_common(30)]
                 #print(Tx, Ty)
-                
-                
-            #ARIMA 
-            #Changed in favor of rolling mean manually calculated due to CPU overhead
-            
-            if len(timex) > 3:
-                try:
-                    #Calculating moving average instead
-                    arimap.append(np.mean([posvar[-3],posvar[-2], posvar[-1]]))
-                   
-                    ariman.append(np.mean([negvar[-3],negvar[-2], negvar[-1]]))
-                    #pos
-                    #modelp = ARIMA(posvar,order=(0,0,2))
-                    #modelp_fit = modelp.fit(disp=0)
-                    #predpos = modelp_fit.predict().astype(float)
-                    #predposap = predpos[-1]
-                    #arimap.append(predposap)
-                    #print("Positve Arima",arimap)
-                    #neg
-                    #modeln = ARIMA(negvar ,order=(0,0,2))
-                    ##modeln_fit = modeln.fit(disp=0)
-                    #predneg = modeln_fit.predict().astype(float)
-                    #prednegap = predneg[-1]
-                    #ariman.append(prednegap)
-                    #print("Negative Arima",ariman)
-                except: 
-                    arimap.append(0.00)
-                    ariman.append(0.00)
-            else: 
-                arimap.append(0.00)
-                ariman.append(0.00)
-               
 
-
-                #modeln = ARIMA(negvar[0:-1], order(0,0,1))
-
-
-            
-
-            #Creates a list used for plotting
-            timex.append(t)
-            timeypos.append(positive + negative + neutral) 
-            timeyneg.append(negative)
-            timeyneu.append(neutral+negative) 
-            timeysent.append(combined) 
-            totalpnn.append(total)
-            
-            #graph vars
+        #graphs per minute
             posvar.append(positve_var)
             negvar.append(negative_var)
             neuvar.append(neutral_var)
-           
-        
+            #Resets for next time interval to replot
+            positve_var = 0
+            neutral_var = 0
+            negative_var = 0
 
+        #Variables for ABS. and Percentage Graph
+            timeypos.append(positive) 
+            timeyneg.append(negative)
+            timeyneu.append(neutral) 
+            
+            #totalpnn.append(total)
+            #total += (positive+negative+neutral)
+            # #text.append(sen)
+            #combined += sen.sentiment.polarity
+                
+            #ARIMA 
+            #Changed in favor of rolling mean manually calculated due to CPU overhead
+           
+            if True:
+                    try:
+                    #Calculating moving average instead
+                        arimap.append(np.mean([posvar[-3],posvar[-2], posvar[-1]]))
+                        ariman.append(np.mean([negvar[-3],negvar[-2], negvar[-1]]))
+                        #pos
+                        #modelp = ARIMA(posvar,order=(0,0,2))
+                        #modelp_fit = modelp.fit(disp=0)
+                        #predpos = modelp_fit.predict().astype(float)
+                        #predposap = predpos[-1]
+                        #arimap.append(predposap)
+                        #print("Positve Arima",arimap)
+                        #neg
+                        #modeln = ARIMA(negvar ,order=(0,0,2))
+                        ##modeln_fit = modeln.fit(disp=0)
+                        #predneg = modeln_fit.predict().astype(float)
+                        #prednegap = predneg[-1]
+                        #ariman.append(prednegap)
+                        #print("Negative Arima",ariman)
+                    except: 
+                        arimap.append(0.00)
+                        ariman.append(0.00)
+            #Absolute Increase
             s1.open()
             s1.write(dict(x=timex, y=timeyneg))
             s2.open()
             s2.write(dict(x=timex, y=timeyneu))
             s3.open()
             s3.write(dict(x=timex, y=timeypos))
+            #Nomralized Percentages
             s4.open()
             s4.write(dict(x=timex, y=timeyneg))
             s5.open()
-            s5.write(dict(x=timex, y=timeypos))
+            s5.write(dict(x=timex, y=timeyneu))
             s6.open()
-            s6.write(dict(x=timex, y=timeyneu))
-            #s7.open()
-            #s7.write(dict(x=, y)))
+            s6.write(dict(x=timex, y=timeypos))
+            #Commons Words Tokenizer
             s8.open()
             s8.write(dict(x=Tx, y=Ty))
-            #s9.open()
-            #s9.write(dict(x=timex, y=timeysent))
+            #Negative Posts w/Arima
             s10.open()
             s10.write(dict(x=timex, y=negvar))
-            #s11.open()
-            #s11.write(dict(x=timex, y=neuvar))
-            s12.open()
-            s12.write(dict(x=timex, y=posvar))
-
             s13.open()
             s13.write(dict(x=timex, y=ariman))
+            #Positive Posts w/Arima
+            s12.open()
+            s12.write(dict(x=timex, y=posvar))
             s14.open()
             s14.write(dict(x=timex, y=arimap))
+
+            #s11.open()
+            #s11.write(dict(x=timex, y=neuvar))
+            #s9.open()
+            #s9.write(dict(x=timex, y=timeysent))
+            #s7.open()
+            #s7.write(dict(x=, y)))
 
 
             #plt.plot(timex, timeypos, c='green')
             #plt.plot(timex, timeyneg, c='red')
             #plt.pause(.1)
 
-            print("tweet #", count)
+            
             #print("time", t)
             #print(blob)
             #print("LABELED AS ", sen.sentiment.polarity)
@@ -445,9 +450,7 @@ class stdOUTlistener(StreamListener):
             #print(totalpnn)
 
             #Resets vars
-            positve_var = 0
-            neutral_var = 0
-            negative_var = 0
+                
 
         except:
             pass
@@ -483,10 +486,15 @@ auth.set_access_token(ACC, ACCKEY)
 #plt.show(block=False)
 
 
+
+
+
+
+
 #Creating Streamer, pairs authentication and listerner class
 stream = Stream(auth, listener)
 
-
+#Engages the stream 
 while True:
     try:
         stream.filter(track=[brand], languages=["en"]);
