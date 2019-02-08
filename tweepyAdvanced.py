@@ -466,27 +466,18 @@ auth = OAuthHandler(API, APIKEY)
 auth.set_access_token(ACC, ACCKEY)
 
 
-
-
+#Enables layout changes in plots
 #py.plot(fig, filename="Twit Sent Abs")
-
 #py.plot(figtable, filename="Live Twit Feed")
-
 #py.plot(fighist, filename="Word Count Hist")
-
 #py.plot(figpercent, filename="Twit Sent Percent")
-
 #py.plot(figminneg, filename="Tweet per min neg")
-
 #py.plot(figminpos, filename="Tweet per min pos")
 
 
 #Uncomment to test Matplotlib
 #plt.style.use('ggplot')
 #plt.show(block=False)
-
-
-
 
 
 

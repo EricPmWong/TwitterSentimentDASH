@@ -9,7 +9,7 @@ client = Client(account_sid, auth_token)
 
 message = client.messages \
                 .create(
-                     body="TWITTER HAS REACHED NEGATIVE SENTIMENT! BAD JUJU ALERT!",
+                     body="Company's twitter Account has reach threshold negative sentiment. Please check twitter ASAP!",
                      from_='+18572801622',
                      to='+17819990216'
                  )
