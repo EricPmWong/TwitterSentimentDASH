@@ -1,2 +1,2 @@
-
-            #print(totalpnn)
+    if t == timex[-1]:
+                    print('PENIS')
