@@ -1,6 +1,5 @@
 # NOTE: If the stream is faster than graphing it will break
 
-
 #Statitstics and Visuals
 import numpy as np
 import pandas as pd
@@ -294,7 +293,7 @@ class stdOUTlistener(StreamListener):
                     print("neutral")
 
                 #Tokenizes words for graph
-                tokens.extend([word for word in blob.words if word not in stopwords.words('english') and word not in "RT" and word not in "’" and word not in "," and word not in "https"])
+                tokens.extend([word for word in blob.words if word not in stopwords.words('english') and word not in "RT" and word not in "’" and word not in "," and word not in "https" and word not in str(brand) and word not in "I" and word not in "Gucci"])
                 tokenstop = Counter(tokens)
                 Tx = [x[1] for x in tokenstop.most_common(30)]
                 Ty = [x[0] for x in tokenstop.most_common(30)]
