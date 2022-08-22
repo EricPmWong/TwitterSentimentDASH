@@ -45,11 +45,11 @@ brand = 'gucci'
 tolerance = 10 
 ##########################################################
 
-# Tokens for Twitter These are my developer keys please do not abuse thanks
-API = 'sFb8T5BX4PAc50iCj1RMnty8m'
-APIKEY = 'b4Eawn17wX2cf2sjBAmkEn8RFlQFezhdakIRcl8mbJKlkqjiZ1'
-ACC = '1087768519268282370-TK5Gp6EfuFTj4WlLVhNRujzVjzOlgY'
-ACCKEY = 'nC5z5yiLweU17qDtrdwrsQmtAJiLUb2915c2IHGAkngYS'
+# Tokens for Twitter (removed)
+API = ''
+APIKEY = ''
+ACC = ''
+ACCKEY = ''
 #Plotly Credentials
 stream_ids = tls.get_credentials_file()['stream_ids']
 print (stream_ids)
